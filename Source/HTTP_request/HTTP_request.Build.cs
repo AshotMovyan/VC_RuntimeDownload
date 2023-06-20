@@ -11,7 +11,7 @@ public class HTTP_request : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HTTP" , "RuntimeArchiver" });
 
-        PrivateDependencyModuleNames.Add("zlib");
+       // PrivateDependencyModuleNames.Add("zlib");
 
         //PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "ThirdParty", "miniz"));
         //PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, "ThirdParty", "miniz", "miniz.lib"));
