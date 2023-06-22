@@ -45,10 +45,10 @@ struct FDirectory
     GENERATED_BODY()
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        FString DirectoryPath = "cookies/";
+        FString UnarchiveDirectoryPath = "cookies/";
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        FString ArchivePath = "cookies/";
+        FString DownloadArchivePath = "cookies/";
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         FString EntryName;
@@ -94,13 +94,14 @@ private:
     void HandleRequestProgress(FHttpRequestPtr Request, int32 BytesSent, int32 BytesReceived);
 
 
+    FString LongUnarchiveDirectoryPath;
+    FString LongDownloadArchivePath;
     FHttpRequestData HttpRequestData;
     FUnzipData UnzipData;
     FDirectory Directory;
 
     //FString SavePath = FPaths::ProjectContentDir() + "cookies/" + "001.zip";
 
-    FString SelectIsParentDirectory(FString Path, bool bAddParentDirectory_arg);
     /** Start unarchiving directory operation */
     void MyUnarchivingToStorage();
 
@@ -120,7 +121,4 @@ private:
 
     UFUNCTION()
         void UnarchiveOnResult_Callback(bool bSuccess);
-
-    UFUNCTION()
-        void UnarchiveOnProgress_Callback();
 };

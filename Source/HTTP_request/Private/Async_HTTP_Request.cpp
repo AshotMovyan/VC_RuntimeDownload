@@ -20,6 +20,11 @@ void UAsync_HTTP_Request::Activate()
 {
     //Super::Activate();
 
+    LongUnarchiveDirectoryPath = FPaths::ProjectContentDir() + Directory.UnarchiveDirectoryPath;
+    LongDownloadArchivePath = FPaths::ProjectContentDir() + Directory.DownloadArchivePath;
+    UE_LOG(LogTemp, Error, TEXT("%s"), *LongUnarchiveDirectoryPath);
+    UE_LOG(LogTemp, Error, TEXT("%s"), *LongDownloadArchivePath);
+
 
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 
@@ -60,11 +65,14 @@ void UAsync_HTTP_Request::HandleHTTPRequestCompleted(FHttpRequestPtr Request, FH
         //BlueprintAction
         //URuntimeArchiverBase* RuntimeArchiverRef = URuntimeArchiverBase::CreateRuntimeArchiver(BlueprintAction, ArchiverClass);
         
-        FString SavePath = Directory.bAddParentDirectory ? FPaths::ProjectContentDir() + Directory.ArchivePath : Directory.ArchivePath + Directory.EntryName;
-        FFileHelper::SaveArrayToFile(Response->GetContent(), *SavePath);
+        
+        //FString SavePath = Directory.bAddParentDirectory ? FPaths::ProjectContentDir() + Directory.DirectoryPath : Directory.DirectoryPath + Directory.EntryName;
+        //FString SavePath = FPaths::ProjectContentDir() + Directory.DownloadArchivePath;
+        FFileHelper::SaveArrayToFile(Response->GetContent(), *LongDownloadArchivePath);
+        UE_LOG(LogTemp, Error, TEXT("The boolean value is %s"), (bWasSuccessful ? TEXT("true") : TEXT("false")));
         MyUnarchivingToStorage();
         // Call the completion delegate with the success status
-        OnRequestCompleted.Broadcast(true);
+        //OnRequestCompleted.Broadcast(true);
     }
     else
     {
@@ -83,26 +91,25 @@ void UAsync_HTTP_Request::HandleRequestProgress(FHttpRequestPtr Request, int32 B
     OnRequestProgress.Broadcast(BytesSent, BytesReceived);
 }
 
-FString UAsync_HTTP_Request::SelectIsParentDirectory(FString Path, bool bAddParentDirectory_arg)
-{
-    return bAddParentDirectory_arg ? FPaths::ProjectContentDir() + Path : Path;
-}
 
 void UAsync_HTTP_Request::MyUnarchivingToStorage()
 {
-    if (!MyArchiver->OpenArchiveFromStorage(Directory.ArchivePath))
+    if (!IsValid(MyArchiver)) 
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed Myarchiver Is not valied"));
+        OnRequestCompleted.Broadcast(false);
+        return;
+    }
+    if (!MyArchiver->OpenArchiveFromStorage(LongDownloadArchivePath))
     {
         OnRequestCompleted.Broadcast(false);
         return;
     }
-
+    
     UnarchiveOperationResult.BindDynamic(this, &UAsync_HTTP_Request::UnarchiveOnResult_Callback);
 
-    MyArchiver->ExtractEntriesToStorage_Directory(UnarchiveOperationResult, MoveTemp(Directory.EntryName), MoveTemp(Directory.DirectoryPath), Directory.bAddParentDirectory, UnzipData.bForceOverwrite);
-
+    MyArchiver->ExtractEntriesToStorage_Directory(UnarchiveOperationResult, MoveTemp(Directory.EntryName), MoveTemp(LongUnarchiveDirectoryPath), Directory.bAddParentDirectory, UnzipData.bForceOverwrite);
 }
-
-
 
 void UAsync_HTTP_Request::UnarchiveOnResult_Callback(bool bSuccess)
 {
@@ -119,7 +126,3 @@ void UAsync_HTTP_Request::UnarchiveOnResult_Callback(bool bSuccess)
     OnRequestCompleted.Broadcast(true);
 }
 
-void UAsync_HTTP_Request::UnarchiveOnProgress_Callback()
-{
-    OnRequestProgress.Broadcast(0, 0);
-}
